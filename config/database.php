@@ -1,44 +1,34 @@
-<?php 
+<?php
 
-$vDbname = 'estoque.db';
 
-try{
-    $conn = new PDO("sqlite:" . __DIR__ . "/$vDbname");
-    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+// Define the path to the SQLite database file
+$dbPath = __DIR__ . '/estoque.db';
 
-    $conn->exec("CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT NOT NULL UNIQUE,
-        password TEXT NOT NULL,
-        email TEXT NOT NULL UNIQUE,
-        full_name TEXT NOT NULL,
-        is_admin BOOLEAN DEFAULT 0,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )");
+// PDO connection options
+$options = [
+    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+    PDO::ATTR_EMULATE_PREPARES => false,
+];
 
-    $conn->exec("CREATE TABLE IF NOT EXISTS produtos (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nome TEXT NOT NULL,
-        descricao TEXT,
-        quantidade INTEGER NOT NULL,
-        preco REAL NOT NULL,
-        categoria_id INTEGER,
-        user_id INTEGER NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id)
-    )");
+// Create DSN (Data Source Name) for SQLite
+$dsn = "sqlite:" . $dbPath;
 
-    $conn->exec("CREATE TABLE IF NOT EXISTS categorias (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nome TEXT NOT NULL UNIQUE,
-        descricao TEXT,
-        user_id INTEGER NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id)
-    )");
+// Establish database connection
+try {
+    $conn = new PDO($dsn, null, null, $options);
+    
+    // Enable foreign keys support in SQLite
+    $conn->exec('PRAGMA foreign_keys = ON;');
+} catch (PDOException $e) {
+    // Log error and display user-friendly message
+    error_log('Database Connection Error: ' . $e->getMessage());
+    die('Erro ao conectar ao banco de dados. Por favor, contate o administrador do sistema.');
+}
 
-} catch(PDOException $e){
-    echo "Conexão falhou: ". $e->getMessage();
-    exit();
+// Function to get database connection
+function getConnection() {
+    global $conn;
+    return $conn;
 }
 ?>
