@@ -220,7 +220,7 @@ class ProductController {
         
         // Se não houver erros, edita o produto
         try {
-            $resultado = $this->productModel->editarPoducts(
+            $resultado = $this->productModel->editarProduto(
                 $id,
                 $dados['nome'],
                 $dados['descricao'],
@@ -265,7 +265,7 @@ class ProductController {
         }
         
         try {
-            $resultado = $this->productModel->excluirProduct($id);
+            $resultado = $this->productModel->excluirProduto($id);
             
             if ($resultado > 0) {
                 return [
