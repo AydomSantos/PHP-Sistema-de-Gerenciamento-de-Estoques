@@ -1,79 +1,115 @@
 <?php
 // Verificar se o usuário está logado
-if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
+if (!isset($_SESSION['usuario_id'])) {
+    header('Location: index.php?pagina=login');
     exit();
 }
-
-// Obter categorias para o select
-$categoryModel = new CategoryModel($db);
-$categorias = $categoryModel->getAllCategories();
 ?>
 
 <div class="container mt-4">
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <h2>Adicionar Novo Produto</h2>
-        </div>
-        <div class="col-md-6 text-end">
-            <a href="?pagina=produtos" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Voltar
-            </a>
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card-body">
-            <form action="?pagina=produtos&acao=salvar" method="POST" enctype="multipart/form-data">
-                <div class="mb-3">
-                    <label for="nome" class="form-label">Nome do Produto</label>
-                    <input type="text" class="form-control" id="nome" name="nome" required>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Adicionar Novo Produto</h4>
                 </div>
-
-                <div class="mb-3">
-                    <label for="categoria_id" class="form-label">Categoria</label>
-                    <select class="form-select" id="categoria_id" name="categoria_id" required>
-                        <option value="">Selecione uma categoria</option>
-                        <?php foreach ($categorias as $categoria): ?>
-                            <option value="<?php echo $categoria['id']; ?>">
-                                <?php echo htmlspecialchars($categoria['nome']); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <div class="mb-3">
-                    <label for="descricao" class="form-label">Descrição</label>
-                    <textarea class="form-control" id="descricao" name="descricao" rows="3"></textarea>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="quantidade" class="form-label">Quantidade</label>
+                <div class="card-body">
+                    <?php if (isset($_SESSION['mensagem'])): ?>
+                        <div class="alert alert-<?= $_SESSION['tipo_mensagem'] ?? 'info' ?>">
+                            <?= $_SESSION['mensagem'] ?>
+                        </div>
+                        <?php
+                        unset($_SESSION['mensagem']);
+                        unset($_SESSION['tipo_mensagem']);
+                        ?>
+                    <?php endif; ?>
+                    
+                    <form action="index.php?pagina=produtos&acao=adicionarProduto" method="post">
+                        <div class="form-group mb-3">
+                            <label for="nome">Nome do Produto</label>
+                            <input type="text" class="form-control" id="nome" name="nome" required>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="descricao">Descrição</label>
+                            <textarea class="form-control" id="descricao" name="descricao" rows="3"></textarea>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="categoria_id">Categoria</label>
+                            <select class="form-control" id="categoria_id" name="categoria_id" required>
+                                <option value="">Selecione uma categoria</option>
+                                <?php foreach ($categorias as $categoria): ?>
+                                    <option value="<?= $categoria['id'] ?>"><?= $categoria['nome'] ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="preco">Preço</label>
+                            <input type="number" class="form-control" id="preco" name="preco" step="0.01" min="0" required>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="quantidade">Quantidade</label>
                             <input type="number" class="form-control" id="quantidade" name="quantidade" min="0" required>
                         </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="preco" class="form-label">Preço</label>
-                            <div class="input-group">
-                                <span class="input-group-text">R$</span>
-                                <input type="number" class="form-control" id="preco" name="preco" step="0.01" min="0" required>
-                            </div>
+                        
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">Salvar</button>
+                            <a href="index.php?pagina=produtos" class="btn btn-secondary">Cancelar</a>
                         </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Seção de produtos cadastrados -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Produtos Cadastrados</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nome</th>
+                                    <th>Categoria</th>
+                                    <th>Preço</th>
+                                    <th>Quantidade</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (empty($produtos)): ?>
+                                    <tr>
+                                        <td colspan="6" class="text-center">Nenhum produto encontrado</td>
+                                    </tr>
+                                <?php else: ?>
+                                    <?php foreach ($produtos as $produto): ?>
+                                        <tr>
+                                            <td><?= $produto['id'] ?></td>
+                                            <td><?= $produto['nome'] ?></td>
+                                            <td><?= $produto['categoria_nome'] ?? 'Sem categoria' ?></td>
+                                            <td>R$ <?= number_format($produto['preco'], 2, ',', '.') ?></td>
+                                            <td><?= $produto['quantidade'] ?></td>
+                                            <td>
+                                                <a href="index.php?pagina=produtos&acao=editar&id=<?= $produto['id'] ?>" class="btn btn-sm btn-primary">Editar</a>
+                                                <a href="index.php?pagina=produtos&acao=excluir&id=<?= $produto['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Tem certeza que deseja excluir este produto?')">Excluir</a>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-
-                <div class="mb-3">
-                    <label for="imagem" class="form-label">Imagem do Produto</label>
-                    <input type="file" class="form-control" id="imagem" name="imagem" accept="image/*">
-                </div>
-
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save"></i> Salvar Produto
-                </button>
-            </form>
+            </div>
         </div>
     </div>
 </div>

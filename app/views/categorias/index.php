@@ -1,41 +1,20 @@
-<?php
-// Verificar se o usuário está logado
-if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
-    exit();
-}
-
-// Obter mensagens de feedback da sessão
-$success_message = isset($_SESSION['success_message']) ? $_SESSION['success_message'] : '';
-$error_message = isset($_SESSION['error_message']) ? $_SESSION['error_message'] : '';
-
-// Limpar mensagens da sessão
-unset($_SESSION['success_message']);
-unset($_SESSION['error_message']);
-?>
-
-<div class="container mt-4">
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <h2>Gerenciar Categorias</h2>
-        </div>
-        <div class="col-md-6 text-end">
-            <a href="?pagina=categorias&acao=adicionar" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Nova Categoria
-            </a>
-        </div>
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Gerenciamento de Categorias</h1>
+        <a href="index.php?pagina=categorias&acao=adicionar" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nova Categoria
+        </a>
     </div>
 
-    <?php if ($success_message): ?>
-        <div class="alert alert-success">
-            <?php echo $success_message; ?>
+    <?php if (isset($_SESSION['mensagem'])): ?>
+        <div class="alert alert-<?= $_SESSION['tipo_mensagem'] ?> alert-dismissible fade show">
+            <?= $_SESSION['mensagem'] ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
-    <?php endif; ?>
-
-    <?php if ($error_message): ?>
-        <div class="alert alert-danger">
-            <?php echo $error_message; ?>
-        </div>
+        <?php 
+        unset($_SESSION['mensagem']);
+        unset($_SESSION['tipo_mensagem']);
+        ?>
     <?php endif; ?>
 
     <div class="card">
@@ -51,25 +30,29 @@ unset($_SESSION['error_message']);
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if (isset($categorias) && !empty($categorias)): ?>
+                        <?php if (!empty($categorias)): ?>
                             <?php foreach ($categorias as $categoria): ?>
-                                <tr>
-                                    <td><?php echo $categoria['id']; ?></td>
-                                    <td><?php echo htmlspecialchars($categoria['nome']); ?></td>
-                                    <td><?php echo htmlspecialchars($categoria['descricao']); ?></td>
-                                    <td>
-                                        <a href="?pagina=categorias&acao=editar&id=<?php echo $categoria['id']; ?>" class="btn btn-sm btn-info">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <a href="?pagina=categorias&acao=excluir&id=<?php echo $categoria['id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Tem certeza que deseja excluir esta categoria? Isso também excluirá todos os produtos associados a ela.');">
-                                            <i class="fas fa-trash"></i>
-                                        </a>
-                                    </td>
-                                </tr>
+                            <tr>
+                                <td><?= $categoria['id'] ?></td>
+                                <td><?= htmlspecialchars($categoria['nome']) ?></td>
+                                <td><?= htmlspecialchars($categoria['descricao']) ?></td>
+                                <td>
+                                    <a href="?pagina=categorias&acao=editar&id=<?= $categoria['id'] ?>" 
+                                       class="btn btn-sm btn-warning" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="?pagina=categorias&acao=excluir&id=<?= $categoria['id'] ?>" 
+                                       class="btn btn-sm btn-danger" 
+                                       title="Excluir"
+                                       onclick="return confirm('Tem certeza que deseja excluir esta categoria?')">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="4" class="text-center">Nenhuma categoria cadastrada.</td>
+                                <td colspan="4" class="text-center">Nenhuma categoria encontrada</td>
                             </tr>
                         <?php endif; ?>
                     </tbody>

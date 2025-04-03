@@ -1,40 +1,19 @@
+<?php
+// Start output buffering to prevent "headers already sent" errors
+ob_start();
+
+// Make sure there's no whitespace before this opening PHP tag
+// and no whitespace after any closing PHP tag
+?>
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Gerenciamento de Estoque</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        .sidebar {
-            min-height: calc(100vh - 56px);
-            background-color: #f8f9fa;
-            padding: 20px 0;
-        }
-        .sidebar .nav-link {
-            color: #333;
-            padding: 10px 20px;
-        }
-        .sidebar .nav-link:hover {
-            background-color: #e9ecef;
-        }
-        .sidebar .nav-link.active {
-            background-color: #0d6efd;
-            color: white;
-        }
-        .sidebar .nav-link i {
-            margin-right: 10px;
-        }
-        .content {
-            padding: 20px;
-        }
-        .navbar-brand {
-            font-weight: bold;
-        }
-    </style>
+    <title>Sistema de Gerenciamento de Estoques</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <link href="public/css/styles.css" rel="stylesheet">
 </head>
 <body>
     <!-- Navbar -->
@@ -49,7 +28,7 @@
                     <?php if (isset($_SESSION['user_id'])): ?>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-user"></i> <?php echo $_SESSION['user_nome']; ?>
+                                <i class="fas fa-user"></i> <?php echo htmlspecialchars($_SESSION['user_nome']); ?>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li><a class="dropdown-item" href="index.php?pagina=perfil"><i class="fas fa-id-card"></i> Perfil</a></li>
@@ -69,7 +48,7 @@
             <?php if (isset($_SESSION['user_id'])): ?>
                 <!-- Sidebar -->
                 <div class="col-md-3 col-lg-2 d-md-block sidebar collapse">
-                    <div class="position-sticky">
+                    <div class="position-sticky pt-3">
                         <ul class="nav flex-column">
                             <li class="nav-item">
                                 <a class="nav-link <?php echo $pagina == 'home' ? 'active' : ''; ?>" href="index.php">
@@ -101,8 +80,8 @@
             <!-- Main Content -->
             <main class="<?php echo isset($_SESSION['user_id']) ? 'col-md-9 col-lg-10' : 'col-12'; ?> ms-sm-auto px-md-4 content">
                 <?php if (isset($vMensagem) && isset($vTipoMensagem)): ?>
-                    <div class="alert alert-<?php echo $vTipoMensagem; ?> alert-dismissible fade show mt-3" role="alert">
-                        <?php echo $vMensagem; ?>
+                    <div class="alert alert-<?php echo htmlspecialchars($vTipoMensagem); ?> alert-dismissible fade show mt-3" role="alert">
+                        <?php echo htmlspecialchars($vMensagem); ?>
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 <?php endif; ?>

@@ -1,4 +1,6 @@
 <?php
+// Start output buffering at the beginning of the file
+ob_start();
 
 class CategoryController {
     private $vCategoryModel;
@@ -11,7 +13,7 @@ class CategoryController {
 
     // Exibe a página de listagem de categorias
     public function listarCategorias() {
-        $vCategorias = $this->vCategoryModel->getAllCategories();
+        $categorias = $this->vCategoryModel->getAllCategories();
         
         // Verificar se há mensagem na sessão
         $vMensagem = null;
@@ -30,7 +32,7 @@ class CategoryController {
     }
 
     // Exibe o formulário para adicionar uma nova categoria
-    public function adicionarCategoriaForm() {
+    public function adicionar() {
         include_once ROOT_PATH . '/app/views/categorias/adicionar.php';
     }
 
@@ -56,13 +58,13 @@ class CategoryController {
             }
             
             // Redirecionar
-            header("Location: categoria_list.php");
+            header("Location: index.php?pagina=categorias");
             exit();
             
         } catch(Exception $e) {
             $_SESSION['mensagem'] = $e->getMessage();
             $_SESSION['tipo_mensagem'] = "danger";
-            header("Location: categoria_form.php");
+            header("Location: index.php?pagina=categorias&acao=adicionar");
             exit();
         }
     }
@@ -81,7 +83,7 @@ class CategoryController {
         } catch(Exception $e) {
             $_SESSION['mensagem'] = $e->getMessage();
             $_SESSION['tipo_mensagem'] = "danger";
-            header("Location: categoria_list.php");
+            header("Location: index.php?pagina=categorias");
             exit();
         }
     }
@@ -115,13 +117,13 @@ class CategoryController {
             }
             
             // Redirecionar
-            header("Location: categoria_list.php");
+            header("Location: index.php?pagina=categorias");
             exit();
             
         } catch(Exception $e) {
             $_SESSION['mensagem'] = $e->getMessage();
             $_SESSION['tipo_mensagem'] = "danger";
-            header("Location: categoria_editar.php?id=$vCategoriaId");
+            header("Location: index.php?pagina=categorias&acao=editar&id=$vCategoriaId");
             exit();
         }
     }
@@ -152,7 +154,7 @@ class CategoryController {
         }
         
         // Redirecionar
-        header("Location: categoria_list.php");
+        header("Location: index.php?pagina=categorias");
         exit();
     }
     
@@ -167,4 +169,6 @@ class CategoryController {
     }
 }
 
+// Flush the output buffer
+ob_end_flush();
 ?>

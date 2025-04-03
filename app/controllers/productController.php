@@ -1,289 +1,209 @@
 <?php
-
-require_once __DIR__ . '/../models/ProductModel.php';
+// Start output buffering at the beginning of the file
+ob_start();
 
 class ProductController {
     private $productModel;
-    
+    private $categoryModel;
+    private $db;
+
     public function __construct($db) {
+        $this->db = $db;
         $this->productModel = new ProductModel($db);
+        $this->categoryModel = new CategoryModel($db);
     }
-    
-    // Validação e cadastro de produtos
-    public function cadastrarProduto($dados) {
-        $erros = [];
-        
-        // Validação do nome
-        if (empty($dados['nome'])) {
-            $erros[] = "O nome do produto é obrigatório";
-        } elseif (strlen($dados['nome']) > 100) {
-            $erros[] = "O nome do produto deve ter no máximo 100 caracteres";
-        }
-        
-        // Validação da descrição
-        if (empty($dados['descricao'])) {
-            $erros[] = "A descrição do produto é obrigatória";
-        }
-        
-        // Validação do preço
-        if (empty($dados['preco'])) {
-            $erros[] = "O preço do produto é obrigatório";
-        } elseif (!is_numeric($dados['preco']) || $dados['preco'] <= 0) {
-            $erros[] = "O preço deve ser um valor numérico positivo";
-        }
-        
-        // Validação da quantidade
-        if (empty($dados['qtd'])) {
-            $erros[] = "A quantidade do produto é obrigatória";
-        } elseif (!is_numeric($dados['qtd']) || $dados['qtd'] < 0) {
-            $erros[] = "A quantidade deve ser um valor numérico não negativo";
-        }
-        
-        // Validação do código
-        if (!empty($dados['codigo']) && strlen($dados['codigo']) > 50) {
-            $erros[] = "O código do produto deve ter no máximo 50 caracteres";
-        }
-        
-        // Validação da unidade
-        if (empty($dados['unidade'])) {
-            $erros[] = "A unidade de medida é obrigatória";
-        }
-        
-        // Validação do NCM
-        if (!empty($dados['ncm']) && !preg_match('/^\d{8}$/', $dados['ncm'])) {
-            $erros[] = "O NCM deve conter 8 dígitos numéricos";
-        }
-        
-        // Se houver erros, retorna os erros
-        if (!empty($erros)) {
-            return [
-                'status' => false,
-                'mensagem' => 'Erros de validação',
-                'erros' => $erros
-            ];
-        }
-        
-        // Se não houver erros, cadastra o produto
-        try {
-            $id = $this->productModel->cadastrarProduto(
-                $dados['nome'],
-                $dados['descricao'],
-                $dados['preco'],
-                $dados['imagem'] ?? null,
-                $dados['qtd'],
-                $dados['codigo_produto_integracao'] ?? null,
-                $dados['codigo'] ?? null,
-                $dados['unidade'],
-                $dados['ncm'] ?? null,
-                $dados['descr_detalhada'] ?? null,
-                $dados['obs_internas'] ?? null
-            );
-            
-            if ($id) {
-                return [
-                    'status' => true,
-                    'mensagem' => 'Produto cadastrado com sucesso',
-                    'id' => $id
-                ];
-            } else {
-                return [
-                    'status' => false,
-                    'mensagem' => 'Erro ao cadastrar produto'
-                ];
-            }
-        } catch (Exception $e) {
-            return [
-                'status' => false,
-                'mensagem' => 'Erro ao cadastrar produto: ' . $e->getMessage()
-            ];
-        }
-    }
-    
-    // Busca todos os produtos com validação
+
+    // Exibe a página de listagem de produtos
     public function getAllProducts() {
+        $produtos = $this->productModel->getAllProducts();
+        $categorias = $this->categoryModel->getAllCategories();
+        
+        include_once ROOT_PATH . '/app/views/produtos/index.php';
+    }
+
+    // Exibe o formulário para adicionar um novo produto
+    public function adicionar() {
+        $categorias = $this->categoryModel->getAllCategories();
+        $produtos = $this->productModel->getAllProducts(); // Buscar todos os produtos
+        
+        // Debug
+        error_log("Método adicionar chamado. Produtos encontrados: " . count($produtos));
+        
+        include_once ROOT_PATH . '/app/views/produtos/adicionar.php';
+    }
+
+    // Processa o formulário de adição de produto
+    public function adicionarProduto() {
         try {
-            $produtos = $this->productModel->getAllProducts();
-            
-            if ($produtos) {
-                return [
-                    'status' => true,
-                    'produtos' => $produtos
-                ];
-            } else {
-                return [
-                    'status' => true,
-                    'mensagem' => 'Nenhum produto encontrado',
-                    'produtos' => []
-                ];
+            // Validar dados
+            if(empty($_POST['nome'])) {
+                throw new Exception("O nome do produto é obrigatório");
             }
-        } catch (Exception $e) {
-            return [
-                'status' => false,
-                'mensagem' => 'Erro ao buscar produtos: ' . $e->getMessage()
-            ];
+            
+            if(empty($_POST['categoria_id'])) {
+                throw new Exception("A categoria do produto é obrigatória");
+            }
+            
+            if(!is_numeric($_POST['preco']) || $_POST['preco'] < 0) {
+                throw new Exception("O preço deve ser um valor numérico positivo");
+            }
+            
+            if(!is_numeric($_POST['quantidade']) || $_POST['quantidade'] < 0) {
+                throw new Exception("A quantidade deve ser um valor numérico positivo");
+            }
+            
+            $nome = trim($_POST['nome']);
+            $descricao = trim($_POST['descricao'] ?? '');
+            $categoriaId = (int)$_POST['categoria_id'];
+            $preco = (float)$_POST['preco'];
+            $quantidade = (int)$_POST['quantidade'];
+            
+            // Add debugging
+            error_log("Tentando cadastrar produto: " . $nome);
+            
+            // Cadastrar produto
+            $produtoId = $this->productModel->adicionarProduto($nome, $descricao, $categoriaId, $preco, $quantidade);
+            
+            if($produtoId) {
+                $_SESSION['mensagem'] = "Produto cadastrado com sucesso!";
+                $_SESSION['tipo_mensagem'] = "success";
+                // Redirecionar para a lista de produtos
+                header("Location: index.php?pagina=produtos");
+                exit();
+            } else {
+                throw new Exception("Erro ao cadastrar produto.");
+            }
+            
+            // Redirecionar
+            header("Location: index.php?pagina=produtos&acao=adicionar");
+            exit();
+            
+        } catch(Exception $e) {
+            $_SESSION['mensagem'] = $e->getMessage();
+            $_SESSION['tipo_mensagem'] = "danger";
+            header("Location: index.php?pagina=produtos&acao=listar");
+            exit();
         }
     }
-    
-    // Busca produto por ID com validação
-    public function getProductById($id) {
-        // Validação do ID
-        if (empty($id) || !is_numeric($id) || $id <= 0) {
-            return [
-                'status' => false,
-                'mensagem' => 'ID de produto inválido'
-            ];
-        }
-        
+
+    // Exibe o formulário para editar um produto
+    public function editarProdutoForm($produtoId) {
         try {
-            $produto = $this->productModel->getProductById($id);
+            $produto = $this->productModel->getProductById($produtoId);
             
-            if ($produto) {
-                return [
-                    'status' => true,
-                    'produto' => $produto
-                ];
-            } else {
-                return [
-                    'status' => false,
-                    'mensagem' => 'Produto não encontrado'
-                ];
+            if(!$produto) {
+                throw new Exception("Produto não encontrado");
             }
-        } catch (Exception $e) {
-            return [
-                'status' => false,
-                'mensagem' => 'Erro ao buscar produto: ' . $e->getMessage()
-            ];
+            
+            $categorias = $this->categoryModel->getAllCategories();
+            
+            include_once ROOT_PATH . '/app/views/produtos/editar.php';
+            
+        } catch(Exception $e) {
+            $_SESSION['mensagem'] = $e->getMessage();
+            $_SESSION['tipo_mensagem'] = "danger";
+            header("Location: index.php?pagina=produtos&acao=listar");
+            exit();
         }
     }
-    
-    // Edita produto com validação
-    public function editarProduto($id, $dados) {
-        // Validação do ID
-        if (empty($id) || !is_numeric($id) || $id <= 0) {
-            return [
-                'status' => false,
-                'mensagem' => 'ID de produto inválido'
-            ];
-        }
-        
-        $erros = [];
-        
-        // Validação do nome
-        if (empty($dados['nome'])) {
-            $erros[] = "O nome do produto é obrigatório";
-        } elseif (strlen($dados['nome']) > 100) {
-            $erros[] = "O nome do produto deve ter no máximo 100 caracteres";
-        }
-        
-        // Validação da descrição
-        if (empty($dados['descricao'])) {
-            $erros[] = "A descrição do produto é obrigatória";
-        }
-        
-        // Validação do preço
-        if (empty($dados['preco'])) {
-            $erros[] = "O preço do produto é obrigatório";
-        } elseif (!is_numeric($dados['preco']) || $dados['preco'] <= 0) {
-            $erros[] = "O preço deve ser um valor numérico positivo";
-        }
-        
-        // Validação da quantidade
-        if (empty($dados['qtd'])) {
-            $erros[] = "A quantidade do produto é obrigatória";
-        } elseif (!is_numeric($dados['qtd']) || $dados['qtd'] < 0) {
-            $erros[] = "A quantidade deve ser um valor numérico não negativo";
-        }
-        
-        // Validação do código
-        if (!empty($dados['codigo']) && strlen($dados['codigo']) > 50) {
-            $erros[] = "O código do produto deve ter no máximo 50 caracteres";
-        }
-        
-        // Validação da unidade
-        if (empty($dados['unidade'])) {
-            $erros[] = "A unidade de medida é obrigatória";
-        }
-        
-        // Validação do NCM
-        if (!empty($dados['ncm']) && !preg_match('/^\d{8}$/', $dados['ncm'])) {
-            $erros[] = "O NCM deve conter 8 dígitos numéricos";
-        }
-        
-        // Se houver erros, retorna os erros
-        if (!empty($erros)) {
-            return [
-                'status' => false,
-                'mensagem' => 'Erros de validação',
-                'erros' => $erros
-            ];
-        }
-        
-        // Se não houver erros, edita o produto
+
+    // Processa o formulário de edição de produto
+    public function editarProduto($produtoId) {
         try {
-            $resultado = $this->productModel->editarProduto(
-                $id,
-                $dados['nome'],
-                $dados['descricao'],
-                $dados['preco'],
-                $dados['imagem'] ?? null,
-                $dados['qtd'],
-                $dados['codigo_produto_integracao'] ?? null,
-                $dados['codigo'] ?? null,
-                $dados['unidade'],
-                $dados['ncm'] ?? null,
-                $dados['descr_detalhada'] ?? null,
-                $dados['obs_internas'] ?? null
-            );
-            
-            if ($resultado > 0) {
-                return [
-                    'status' => true,
-                    'mensagem' => 'Produto atualizado com sucesso'
-                ];
-            } else {
-                return [
-                    'status' => false,
-                    'mensagem' => 'Nenhuma alteração realizada ou produto não encontrado'
-                ];
+            // Validar dados
+            if(empty($_POST['nome'])) {
+                throw new Exception("O nome do produto é obrigatório");
             }
-        } catch (Exception $e) {
-            return [
-                'status' => false,
-                'mensagem' => 'Erro ao atualizar produto: ' . $e->getMessage()
-            ];
+            
+            if(empty($_POST['categoria_id'])) {
+                throw new Exception("A categoria do produto é obrigatória");
+            }
+            
+            if(!is_numeric($_POST['preco']) || $_POST['preco'] < 0) {
+                throw new Exception("O preço deve ser um valor numérico positivo");
+            }
+            
+            if(!is_numeric($_POST['quantidade']) || $_POST['quantidade'] < 0) {
+                throw new Exception("A quantidade deve ser um valor numérico positivo");
+            }
+            
+            $nome = trim($_POST['nome']);
+            $descricao = trim($_POST['descricao'] ?? '');
+            $categoriaId = (int)$_POST['categoria_id'];
+            $preco = (float)$_POST['preco'];
+            $quantidade = (int)$_POST['quantidade'];
+            
+            // Atualizar produto
+            $result = $this->productModel->editarProduto($produtoId, $nome, $descricao, $categoriaId, $preco, $quantidade);
+            
+            if($result) {
+                $_SESSION['mensagem'] = "Produto atualizado com sucesso!";
+                $_SESSION['tipo_mensagem'] = "success";
+            } else {
+                $_SESSION['mensagem'] = "Nenhuma alteração realizada.";
+                $_SESSION['tipo_mensagem'] = "info";
+            }
+            
+            // Redirecionar
+            header("Location: index.php?pagina=produtos&acao=listar");
+            exit();
+            
+        } catch(Exception $e) {
+            $_SESSION['mensagem'] = $e->getMessage();
+            $_SESSION['tipo_mensagem'] = "danger";
+            header("Location: index.php?pagina=produtos&acao=editar&id=$produtoId");
+            exit();
         }
     }
-    
-    // Exclui produto com validação
-    public function excluirProduto($id) {
-        // Validação do ID
-        if (empty($id) || !is_numeric($id) || $id <= 0) {
-            return [
-                'status' => false,
-                'mensagem' => 'ID de produto inválido'
-            ];
+
+    // Processa a exclusão de um produto
+    public function excluirProduto($produtoId) {
+        try {
+            // Verificar se o produto existe
+            $produto = $this->productModel->getProductById($produtoId);
+            if(!$produto) {
+                throw new Exception("Produto não encontrado");
+            }
+            
+            // Excluir produto
+            $result = $this->productModel->excluirProduto($produtoId);
+            
+            if($result) {
+                $_SESSION['mensagem'] = "Produto excluído com sucesso!";
+                $_SESSION['tipo_mensagem'] = "success";
+            } else {
+                $_SESSION['mensagem'] = "Erro ao excluir produto.";
+                $_SESSION['tipo_mensagem'] = "danger";
+            }
+            
+        } catch(Exception $e) {
+            $_SESSION['mensagem'] = $e->getMessage();
+            $_SESSION['tipo_mensagem'] = "danger";
         }
         
+        // Redirecionar
+        header("Location: index.php?pagina=produtos&acao=listar");
+        exit();
+    }
+
+    // Method to get a product by its ID
+    public function getProductById($produtoId) {
         try {
-            $resultado = $this->productModel->excluirProduto($id);
+            $produto = $this->productModel->getProductById($produtoId);
             
-            if ($resultado > 0) {
-                return [
-                    'status' => true,
-                    'mensagem' => 'Produto excluído com sucesso'
-                ];
-            } else {
-                return [
-                    'status' => false,
-                    'mensagem' => 'Produto não encontrado'
-                ];
+            if (!$produto) {
+                throw new Exception("Produto não encontrado");
             }
+            
+            return $produto;
         } catch (Exception $e) {
-            return [
-                'status' => false,
-                'mensagem' => 'Erro ao excluir produto: ' . $e->getMessage()
-            ];
+            $_SESSION['mensagem'] = $e->getMessage();
+            $_SESSION['tipo_mensagem'] = "danger";
+            return null;
         }
     }
 }
+
+// Flush the output buffer
+ob_end_flush();
 ?>

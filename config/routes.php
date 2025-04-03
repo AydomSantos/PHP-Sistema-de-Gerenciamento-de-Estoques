@@ -4,7 +4,7 @@ return [
     'GET' => [
         '/' => 'ProductController@index',
         '/products' => 'ProductController@index',
-        '/create' => 'ProductController@create',
+        '/adicionar' => 'ProductController@adicionar',
         '/edit/{id}' => 'ProductController@edit',
         '/view/{id}' => 'ProductController@view',
     ],

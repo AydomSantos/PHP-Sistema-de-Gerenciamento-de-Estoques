@@ -1,93 +1,94 @@
 <?php
-
-class CategoryModel{
-    private $vDb;
-
-    public function __construct($vDb){
-        $this->vDb = $vDb;
+class CategoryModel {
+    private $conn;
+    
+    public function __construct($db) {
+        $this->conn = $db;
     }
-
-    // Cadastra uma nova categoria
-    public function cadastrarCategoria($pNome, $pDescricao){
-        try{
-            $vSql = "INSERT INTO categorias (nome, descricao) VALUES (:nome, :descricao)";
-            $vStmt = $this->vDb->prepare($vSql); 
-            $vStmt->bindParam(':nome', $pNome);
-            $vStmt->bindParam(':descricao', $pDescricao);
-            $vStmt->execute();
-            return $this->vDb->lastInsertId();
-        } catch(Exception $e){
-            echo "Erro ao cadastrar a categoria: " . $e->getMessage();
-            exit(); 
-        }
-      
-    }
-
-    // Busca todas as categorias
-    public function getAllCategories(){
-        try{
-            $vSql = "SELECT * FROM categorias";
-            $vStmt = $this->vDb->prepare($vSql);
-            $vStmt->execute();
-            return $vStmt->fetchAll(PDO::FETCH_ASSOC);
-        }catch(Exception $e){
-            echo "Erro ao buscar as categorias: ". $e->getMessage();
-            exit();
-        }
-    }
-
-    // Busca categoria por ID
-    public function getCategoryById($pId){
-        try{
-            $vSql = "SELECT * FROM categorias WHERE id = :id";
-            $vStmt = $this->vDb->prepare($vSql);
-            $vStmt->bindParam(':id', $pId);
-            $vStmt->execute();
-            return $vStmt->fetch(PDO::FETCH_ASSOC);
-        }catch(Exception $e){
-            echo "Erro ao buscar a categoria: ". $e->getMessage();
-            exit();
-        }
-    }
-
-    // Edita uma categoria
-    public function editarCategoria($pId, $pNome, $pDescricao){
-        try{
-            $vSql = "UPDATE categorias SET nome = :nome, descricao = :descricao WHERE id = :id";
-            $vStmt = $this->vDb->prepare($vSql);
-            $vStmt->bindParam(':id', $pId);
-            $vStmt->bindParam(':nome', $pNome);
-            $vStmt->bindParam(':descricao', $pDescricao);
-            $vStmt->execute();
-            return $vStmt->rowCount();
-        } catch(Exception $e){
-            echo "Erro ao editar a categoria: ". $e->getMessage();
-            exit();
-        }
-    }
-
-    // Exclui uma categoria
-    public function excluirCategoria($pId){
-        try{
-            $vSql = "SELECT COUNT(*) as total FROM produtos WHERE categoria_id = :id";
-            $vStmt = $this->vDb->prepare($vSql);
-            $vStmt->bindParam(':id', $pId);
-            $vStmt->execute(); 
-            $vResultado = $vStmt->fetch(PDO::FETCH_ASSOC);
-            if($vResultado['total'] > 0){
-                throw new Exception("Não é possível excluir esta categoria pois existem produtos associados a ela.");
+    
+    // Cadastrar nova categoria
+    public function cadastrarCategoria($nome, $descricao) {
+        try {
+            $query = "INSERT INTO categorias (nome, descricao) VALUES (:nome, :descricao)";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':nome', $nome);
+            $stmt->bindParam(':descricao', $descricao);
+            
+            if($stmt->execute()) {
+                return $this->conn->lastInsertId();
             }
             
-            $vSql = "DELETE FROM categorias WHERE id = :id";
-            $vStmt = $this->vDb->prepare($vSql);
-            $vStmt->bindParam(':id', $pId);
-            $vStmt->execute();
-            return $vStmt->rowCount();
-        } catch(Exception $e){
-            echo "Erro ao excluir a categoria: ". $e->getMessage();
-            exit(); 
+            return false;
+        } catch(PDOException $e) {
+            error_log("Erro ao cadastrar categoria: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    // Obter todas as categorias
+    public function getAllCategories() {
+        try {
+            $query = "SELECT * FROM categorias ORDER BY nome";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch(PDOException $e) {
+            error_log("Erro ao buscar categorias: " . $e->getMessage());
+            return [];
+        }
+    }
+    
+    // Obter categoria por ID
+    public function getCategoryById($id) {
+        try {
+            $query = "SELECT * FROM categorias WHERE id = :id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':id', $id);
+            $stmt->execute();
+            
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch(PDOException $e) {
+            error_log("Erro ao buscar categoria por ID: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    // Editar categoria existente
+    public function editarCategoria($id, $nome, $descricao) {
+        try {
+            $query = "UPDATE categorias SET nome = :nome, descricao = :descricao WHERE id = :id";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':id', $id);
+            $stmt->bindParam(':nome', $nome);
+            $stmt->bindParam(':descricao', $descricao);
+            
+            $stmt->execute();
+            
+            return $stmt->rowCount() > 0;
+        } catch(PDOException $e) {
+            error_log("Erro ao editar categoria: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    // Excluir categoria
+    public function excluirCategoria($id) {
+        try {
+            $query = "DELETE FROM categorias WHERE id = :id";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':id', $id);
+            
+            $stmt->execute();
+            
+            return $stmt->rowCount() > 0;
+        } catch(PDOException $e) {
+            error_log("Erro ao excluir categoria: " . $e->getMessage());
+            return false;
         }
     }
 }
-
 ?>

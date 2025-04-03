@@ -27,7 +27,13 @@ try {
     
     // Dados do usuário de teste
     $nome = "Aydom";
-    $email = "aydom@sistema.com";
+    $email = "CREATE TABLE IF NOT EXISTS usuarios (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    senha TEXT NOT NULL,
+    cargo TEXT NOT NULL
+);";
     $senha = "123456";
     $cargo = "admin"; // Definindo como admin para ter acesso completo
     

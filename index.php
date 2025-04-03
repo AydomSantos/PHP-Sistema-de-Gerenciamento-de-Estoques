@@ -1,4 +1,7 @@
 <?php
+// Start output buffering at the very beginning
+ob_start();
+
 // Iniciar sessão
 session_start();
 
@@ -91,11 +94,117 @@ try {
             break;
         case 'categorias':
             $categoryController = new CategoryController($db);
-            $categoryController->listarCategorias();
+            
+            // Verificar se há uma ação específica
+            if (isset($_GET['acao'])) {
+                $acao = $_GET['acao'];
+                
+                switch ($acao) {
+                    case 'adicionar':
+                        $categoryController->adicionar();
+                        break;
+                        
+                    case 'salvar':
+                        $categoryController->adicionarCategoria();
+                        break;
+                        
+                    case 'editar':
+                        if (isset($_GET['id'])) {
+                            $categoryController->editarCategoriaForm($_GET['id']);
+                        } else {
+                            $_SESSION['mensagem'] = "ID da categoria não fornecido";
+                            $_SESSION['tipo_mensagem'] = "danger";
+                            header("Location: index.php?pagina=categorias");
+                            exit();
+                        }
+                        break;
+                        
+                    case 'atualizar':
+                        if (isset($_POST['id'])) {
+                            $categoryController->editarCategoria($_POST['id']);
+                        } else {
+                            $_SESSION['mensagem'] = "ID da categoria não fornecido";
+                            $_SESSION['tipo_mensagem'] = "danger";
+                            header("Location: index.php?pagina=categorias");
+                            exit();
+                        }
+                        break;
+                        
+                    case 'excluir':
+                        if (isset($_GET['id'])) {
+                            $categoryController->excluirCategoria($_GET['id']);
+                        } else {
+                            $_SESSION['mensagem'] = "ID da categoria não fornecido";
+                            $_SESSION['tipo_mensagem'] = "danger";
+                            header("Location: index.php?pagina=categorias");
+                            exit();
+                        }
+                        break;
+                        
+                    default:
+                        $categoryController->listarCategorias();
+                        break;
+                }
+            } else {
+                $categoryController->listarCategorias();
+            }
             break;
         case 'produtos':
             $productController = new ProductController($db);
-            $productController->getAllProducts();  
+            
+            // Verificar se há uma ação específica
+            if (isset($_GET['acao'])) {
+                $acao = $_GET['acao'];
+                
+                switch ($acao) {
+                    case 'adicionar':
+                        $productController->adicionar();
+                        break;
+                        
+                    case 'salvar':
+                        $productController->adicionarProduto();
+                        break;
+                    
+                    case 'editar':
+                        if (isset($_GET['id'])) {
+                            $productController->editarProdutoForm($_GET['id']);
+                        } else {
+                            $_SESSION['mensagem'] = "ID do produto não fornecido";
+                            $_SESSION['tipo_mensagem'] = "danger";
+                            header("Location: index.php?pagina=produtos");
+                            exit();
+                        }
+                        break;
+                        
+                    case 'atualizar':
+                        if (isset($_POST['id'])) {
+                            $productController->editarProduto($_POST['id']);
+                        } else {
+                            $_SESSION['mensagem'] = "ID do produto não fornecido";
+                            $_SESSION['tipo_mensagem'] = "danger";
+                            header("Location: index.php?pagina=produtos");
+                            exit();
+                        }
+                        break;
+                        
+                    case 'excluir':
+                        if (isset($_GET['id'])) {
+                            $productController->excluirProduto($_GET['id']);
+                        } else {
+                            $_SESSION['mensagem'] = "ID do produto não fornecido";
+                            $_SESSION['tipo_mensagem'] = "danger";
+                            header("Location: index.php?pagina=produtos");
+                            exit();
+                        }
+                        break;
+                        
+                    default:
+                        $productController->getAllProducts();
+                        break;
+                }
+            } else {
+                $productController->getAllProducts();
+            }
             break;
         case 'usuarios':
             $userController = new UserController($db);
@@ -118,4 +227,3 @@ try {
 if (verificarArquivo('app/views/templates/footer.php')) {
     include_once 'app/views/templates/footer.php';
 }
-?>

@@ -5,7 +5,9 @@ require_once __DIR__ . '/../controllers/ProductController.php';
 require_once __DIR__ . '/../../config/database.php';
 
 // Inicializa o controller com a conexão do banco de dados
-$productController = new ProductController(getConnection());
+$database = new Database();
+$connection = $database->getConnection();
+$productController = new ProductController($connection);
 
 // Define a URL base para as rotas de produtos
 $productBasePath = '/produtos';
@@ -46,7 +48,7 @@ if (strpos($requestUri, $productBasePath) === 0) {
             exit;
         } elseif ($requestMethod === 'POST') {
             // Processa o formulário de adição
-            $resultado = $productController->cadastrarProduto($_POST);
+            $resultado = $productController->adicionarProduto($_POST);
 
             if ($resultado['status']) {
                 // Redireciona com mensagem de sucesso
