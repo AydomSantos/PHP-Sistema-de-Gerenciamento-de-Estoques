@@ -1,208 +1,142 @@
 # Sistema de Gerenciamento de Estoque
 
-Este é um sistema web para gerenciamento de estoque desenvolvido em PHP, que permite controlar produtos, categorias e gerar relatórios de inventário.
-
-## Requisitos do Sistema
-
-- PHP 7.4 ou superior
-- SQLite3
-- Servidor web (Apache/Nginx)
-- Navegador web moderno
-
-## Instalação
-
-1. Clone ou baixe este repositório para seu ambiente local
-2. Certifique-se de que o PHP está instalado em seu sistema
-3. Configure seu servidor web para apontar para o diretório do projeto
-4. Verifique se as permissões do arquivo do banco de dados (config/estoque.db) estão corretas
-
-## Estrutura do Projeto
-
-```
-/
-├── api/                    # APIs para dados do dashboard
-├── categories/             # Gerenciamento de categorias
-├── config/                 # Configurações do sistema
-├── controller/             # Controladores
-├── includes/               # Arquivos de cabeçalho e rodapé
-├── model/                  # Modelos de dados
-├── products/               # Gerenciamento de produtos
-├── reports/                # Geração de relatórios
-└── view/                   # Visualizações
-```
-
-## Configuração do Banco de Dados
-
-O sistema utiliza SQLite como banco de dados. O arquivo do banco de dados está localizado em `config/estoque.db`. A conexão é configurada em `config/database.php`:
-
-```php
-<?php
-try {
-    $conn = new PDO("sqlite:" . __DIR__ . "/estoque.db");
-    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch(PDOException $e) {
-    echo "Erro de conexão: " . $e->getMessage();
-}
-```
+## Sobre o Projeto
+Este sistema de gerenciamento de estoque foi desenvolvido para facilitar o controle de produtos, categorias e usuários em um ambiente empresarial. Utilizando uma arquitetura MVC (Model-View-Controller) em PHP, o sistema oferece uma interface intuitiva e funcionalidades robustas para o gerenciamento completo do estoque.
 
 ## Funcionalidades Principais
 
-### 1. Gerenciamento de Produtos
+### Autenticação e Controle de Acesso
+- Sistema de login seguro com controle de sessão
+- Níveis de acesso diferenciados (Administrador e Usuário)
+- Proteção contra acessos não autorizados
+- Gerenciamento de sessões de usuário
 
-- **Adicionar Produto**: Acesse `products/add.php`
-  ```php
-  // Exemplo de inserção de produto
-  $stmt = $conn->prepare("INSERT INTO produtos (nome, descricao, quantidade, preco, user_id) VALUES (?, ?, ?, ?, ?)");
-  $stmt->execute([$nome, $descricao, $quantidade, $preco, $user_id]);
-  ```
+### Gerenciamento de Usuários
+- Cadastro e manutenção de usuários do sistema
+- Definição de níveis de acesso
+- Alteração de senhas com criptografia
+- Controle de status de usuários (Ativo/Inativo)
 
-- **Editar Produto**: Acesse `products/edit.php`
-  ```php
-  // Exemplo de atualização de produto
-  $stmt = $conn->prepare("UPDATE produtos SET nome = ?, descricao = ?, quantidade = ?, preco = ? WHERE id = ?");
-  $stmt->execute([$nome, $descricao, $quantidade, $preco, $id]);
-  ```
+### Controle de Produtos
+- Cadastro completo de produtos
+- Categorização de itens
+- Controle de estoque
+- Histórico de movimentações
 
-### 2. Gerenciamento de Categorias
+### Gestão de Categorias
+- Organização hierárquica de produtos
+- Cadastro e manutenção de categorias
+- Relatórios por categoria
 
-- **Gerenciar Categorias**: Acesse `categories/manage.php`
-  ```php
-  // Exemplo de associação de produto com categoria
-  $stmt = $conn->prepare("INSERT INTO produto_categorias (produto_id, categoria_id) VALUES (?, ?)");
-  $stmt->execute([$produto_id, $categoria_id]);
-  ```
+## Tecnologias Utilizadas
 
-### 3. Relatórios
+### Backend
+- PHP 7.4+
+- MySQL/MariaDB
+- Arquitetura MVC
 
-- **Gerar Relatório de Inventário**: Acesse `reports/generate.php`
-  ```php
-  // Exemplo de consulta para relatório
-  $stmt = $conn->prepare("SELECT p.*, c.nome as categoria FROM produtos p LEFT JOIN categorias c ON p.categoria_id = c.id WHERE p.user_id = ?");
-  $stmt->execute([$user_id]);
-  ```
+### Frontend
+- HTML5
+- CSS3
+- Bootstrap 5
+- JavaScript
+- Font Awesome (ícones)
 
-## Sistema de Autenticação e Administração
+## Requisitos do Sistema
+- Servidor Web (Apache/Nginx)
+- PHP 7.4 ou superior
+- MySQL 5.7 ou superior
+- Extensões PHP:
+  - PDO
+  - PDO_MySQL
+  - mbstring
 
-### Login e Controle de Acesso
+## Instalação
 
-- **Login**: Implementado em `login.php`
-  ```php
-  // Exemplo de verificação de login
-  session_start();
-  if (!isset($_SESSION['user_id'])) {
-      header('Location: login.php');
-      exit();
-  }
-  ```
+1. Clone o repositório:
+```bash
+git clone [URL_DO_REPOSITÓRIO]
+cd sistema-gerenciamento-estoque
+```
 
-### Sistema Administrativo
+2. Configure o banco de dados:
+- Crie um banco de dados MySQL
+- Copie o arquivo `config/database.example.php` para `config/database.php`
+- Configure as credenciais do banco no arquivo `config/database.php`
 
-- **Painel do Administrador**: Acesse `admin/manage_users.php`
-  - Gerenciamento completo de usuários
-  - Controle de permissões de acesso
-  - Monitoramento de atividades do sistema
+3. Execute o script de instalação:
+```bash
+php setup_database.php
+```
 
-#### Funcionalidades Administrativas
+4. Configure o servidor web:
+- Configure o documento root para a pasta do projeto
+- Certifique-se que o mod_rewrite está habilitado (Apache)
 
-1. **Gerenciamento de Usuários**:
-   - Criar novos usuários
-   - Editar informações de usuários existentes
-   - Desativar/ativar contas
-   - Redefinir senhas
+5. Acesse o sistema:
+- Abra o navegador e acesse `http://seu-dominio.com`
 
-2. **Controle de Permissões**:
-   - Definir níveis de acesso (Admin/Usuário)
-   - Configurar permissões específicas
-   - Gerenciar restrições de acesso
+## Usuário Padrão
+Após a instalação, você pode acessar o sistema com as seguintes credenciais:
 
-3. **Monitoramento**:
-   - Visualizar logs de atividades
-   - Acompanhar alterações no sistema
-   - Gerar relatórios de uso
+- **Email:** admin@sistema.com
+- **Senha:** admin123
 
-#### Criação de Administrador
+**Importante:** Altere a senha do administrador após o primeiro acesso!
 
-- Execute o script `create_admin.php` para criar o primeiro usuário administrador
-- Utilize credenciais seguras para acesso administrativo
-- Mantenha backup das credenciais em local seguro
+## Estrutura do Projeto
+```
+sistema-gerenciamento-estoque/
+├── app/
+│   ├── controllers/    # Controladores do sistema
+│   ├── models/         # Modelos de dados
+│   ├── views/          # Interfaces do usuário
+│   └── helpers/        # Funções auxiliares
+├── config/            # Arquivos de configuração
+├── public/            # Arquivos públicos (CSS, JS, imagens)
+├── vendor/            # Dependências
+└── index.php          # Ponto de entrada da aplicação
+```
 
-## Dicas de Uso
+## Segurança
+- Proteção contra SQL Injection
+- Validação de dados de entrada
+- Sanitização de saída
+- Controle de sessão seguro
+- Senhas criptografadas
 
-1. **Sempre faça logout** ao terminar de usar o sistema
-2. **Mantenha o backup** do arquivo do banco de dados
-3. **Verifique as permissões** dos arquivos e diretórios
-4. **Utilize senhas fortes** para maior segurança
+## Próximas Atualizações
 
-## Solução de Problemas
+### Em Desenvolvimento
+- [ ] Dashboard com gráficos e estatísticas
+- [ ] Sistema de relatórios avançados
+- [ ] Exportação de dados para CSV/PDF
+- [ ] Controle de lotes e validade
 
-1. **Erro de conexão com banco de dados**:
-   - Verifique se o arquivo estoque.db existe
-   - Confirme as permissões do arquivo
-
-2. **Erro ao fazer login**:
-   - Limpe os cookies do navegador
-   - Verifique se as credenciais estão corretas
-
-3. **Erro ao gerar relatório**:
-   - Verifique se há produtos cadastrados
-   - Confirme se o usuário tem permissão
+### Planejado
+- [ ] API REST para integração
+- [ ] Aplicativo mobile
+- [ ] Sistema de notificações
+- [ ] Backup automático
 
 ## Contribuição
+Contribuições são bem-vindas! Para contribuir:
 
-Para contribuir com o projeto:
-
-1. Faça um fork do repositório
-2. Crie uma branch para sua feature
-3. Faça commit das mudanças
-4. Envie um pull request
+1. Faça um Fork do projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
+5. Abra um Pull Request
 
 ## Suporte
+Para suporte e dúvidas, por favor abra uma issue no repositório do projeto.
 
-Em caso de dúvidas ou problemas:
+## Licença
+Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
 
-1. Consulte a documentação
-2. Verifique os logs de erro
-3. Entre em contato com o administrador do sistema
+## Autores
+Desenvolvido por [Seu Nome/Equipe]
 
-## Kanban do Projeto
+---
 
-### 📋 A Fazer
-
-#### Configuração Inicial
-- [ ] Configurar ambiente de desenvolvimento
-- [ ] Instalar dependências do PHP
-- [ ] Configurar servidor web (Apache/Nginx)
-- [ ] Criar estrutura inicial do banco de dados SQLite
-
-#### Backend
-- [ ] Implementar sistema de autenticação
-- [ ] Desenvolver CRUD de usuários
-- [ ] Criar API para produtos
-- [ ] Criar API para categorias
-- [ ] Implementar sistema de permissões
-
-#### Frontend
-- [ ] Desenvolver interface de login
-- [ ] Criar dashboard principal
-- [ ] Implementar interface de gerenciamento de produtos
-- [ ] Implementar interface de gerenciamento de categorias
-- [ ] Desenvolver sistema de relatórios
-
-### 🔄 Em Andamento
-
-#### Backend
-- [ ] Estruturar conexão com banco de dados
-- [ ] Criar modelos de dados (Models)
-- [ ] Desenvolver controladores (Controllers)
-
-#### Frontend
-- [ ] Definir layout do sistema
-- [ ] Implementar templates base
-
-### ✅ Concluído
-
-#### Planejamento
-- [x] Definir requisitos do sistema
-- [x] Criar estrutura de diretórios
-- [x] Documentar setup inicial
-- [x] Estabelecer padrões de código
+**Nota:** Este é um projeto em desenvolvimento ativo. Novas funcionalidades e melhorias são adicionadas regularmente.
